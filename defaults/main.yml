@@ -1,0 +1,19 @@
+---
+
+# These are the defaults for the destination hosts
+pki_cert_dist_dir: /etc/myssl
+pki_cert_dist_cert: myssl.crt
+pki_cert_dist_chain: myssl.chain.crt
+pki_cert_dist_fullchain: myssl.fullchain.crt
+pki_cert_dist_privkey: myssl.key
+pki_cert_dist_group: certs
+
+# These are not defined in order to force declaration at a project level, but are
+# here for reference. They determine the source host and location and names of the files.
+
+# pki_cert_fetch_source: sourcehost.example.com
+# pki_cert_fetch_dir: /etc/internalcert
+# pki_cert_fetch_cert: myssl.crt
+# pki_cert_fetch_chain: myssl.chain.crt
+# pki_cert_fetch_fullchain: myssl.fullchain.crt
+# pki_cert_fetch_key: myssl.key

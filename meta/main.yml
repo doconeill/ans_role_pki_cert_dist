@@ -1,0 +1,7 @@
+---
+galaxy_info:
+  role_name: pki_cert_dist
+  author: Brian O'Neill
+  description: Manage PKI certificate distribution
+  license: Proprietary
+  min_ansible_version: 2.12.0

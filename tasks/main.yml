@@ -1,0 +1,95 @@
+---
+
+- name: Get the key file
+  ansible.builtin.slurp:
+    src: "{{ pki_cert_fetch_dir }}/{{ pki_cert_fetch_key }}"
+  delegate_to: "{{ pki_cert_fetch_source }}"
+  run_once: true
+  register: pki_cert_fetch_privkey
+
+- name: Get the cert file
+  ansible.builtin.slurp:
+    src: "{{ pki_cert_fetch_dir }}/{{ pki_cert_fetch_cert }}"
+  delegate_to: "{{ pki_cert_fetch_source }}"
+  run_once: true
+  register: pki_cert_fetch_cert
+
+- name: Get the chain file
+  ansible.builtin.slurp:
+    src: "{{ pki_cert_fetch_dir }}/{{ pki_cert_fetch_chain }}"
+  delegate_to: "{{ pki_cert_fetch_source }}"
+  run_once: true
+  register: pki_cert_fetch_chain
+
+- name: Get the fullchain file
+  ansible.builtin.slurp:
+    src: "{{ pki_cert_fetch_dir }}/{{ pki_cert_fetch_fullchain }}"
+  delegate_to: "{{ pki_cert_fetch_source }}"
+  run_once: true
+  register: pki_cert_fetch_fullchain
+
+# We don't need this block as the source server should have the source keys in a different directory
+# - name: Distribute SSL certificates
+#   when: inventory_hostname != pki_cert_fetch_source
+#   block:
+
+- name: Gather service facts
+  ansible.builtin.service_facts:
+
+- name: Create the destination SSL directory
+  ansible.builtin.file:
+    state: directory
+    dest: "{{ pki_cert_dist_dir }}"
+    owner: root
+    group: certs
+    mode: "0750"
+
+- name: Write SSL key file
+  ansible.builtin.copy:
+    content: "{{ pki_cert_fetch_privkey['content'] | b64decode }}"
+    dest: "{{ pki_cert_dist_dir }}/{{ pki_cert_dist_privkey }}"
+    owner: root
+    group: certs
+    mode: "0640"
+  notify:
+    - Reload pki_cert_dist httpd
+    - Restart pki_cert_dist harbor
+    - Restart pki_cert_dist gitlab
+
+- name: Write SSL cert file
+  ansible.builtin.copy:
+    content: "{{ pki_cert_fetch_cert['content'] | b64decode }}"
+    dest: "{{ pki_cert_dist_dir }}/{{ pki_cert_dist_cert }}"
+    owner: root
+    group: certs
+    mode: "0640"
+  notify:
+    - Reload pki_cert_dist httpd
+    - Restart pki_cert_dist harbor
+    - Restart pki_cert_dist gitlab
+
+- name: Write SSL CA chain file
+  ansible.builtin.copy:
+    content: "{{ pki_cert_fetch_chain['content'] | b64decode }}"
+    dest: "{{ pki_cert_dist_dir }}/{{ pki_cert_dist_chain }}"
+    owner: root
+    group: certs
+    mode: "0640"
+  notify:
+    - Reload pki_cert_dist httpd
+    - Restart pki_cert_dist harbor
+    - Restart pki_cert_dist gitlab
+
+- name: Write SSL fullchain file
+  ansible.builtin.copy:
+    content: "{{ pki_cert_fetch_fullchain['content'] | b64decode }}"
+    dest: "{{ pki_cert_dist_dir }}/{{ pki_cert_dist_fullchain }}"
+    owner: root
+    group: certs
+    mode: "0640"
+  notify:
+    - Reload pki_cert_dist httpd
+    - Restart pki_cert_dist harbor
+    - Restart pki_cert_dist gitlab
+
+# End of block we are no longer using

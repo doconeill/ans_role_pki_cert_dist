@@ -1,0 +1,47 @@
+---
+
+- name: Reload pki_cert_dist httpd
+  ansible.builtin.service:
+    name: httpd
+    state: reloaded
+  when:
+    - "'httpd.service' in ansible_facts.services"
+    - "ansible_facts.services['httpd.service'].status == 'enabled'"
+
+- name: Restart pki_cert_dist gitlab
+  ansible.builtin.service:
+    name: gitlab-runsvdir
+    state: restarted
+  when:
+    - "'gitlab-runsvdir.service' in ansible_facts.services"
+    - "ansible_facts.services['gitlab-runsvdir.service'].status == 'enabled'"
+
+
+# These three handle harbor as a single listener handler
+- name: Stop harbor temporarily
+  ansible.builtin.service:
+    name: harbor
+    state: stopped
+  listen: Restart pki_cert_dist harbor
+  when:
+    - "'harbor.service' in ansible_facts.services"
+    - "ansible_facts.services['harbor.service'].status == 'enabled'"
+
+- name: Run harbor prepare script
+  ansible.builtin.command:
+    cmd: ./prepare
+    chdir: "{{ docker_harbor_install_parent_dir }}/harbor"
+  listen: Restart pki_cert_dist harbor
+  when:
+    - "'harbor.service' in ansible_facts.services"
+    - "ansible_facts.services['harbor.service'].status == 'enabled'"
+
+- name: Start harbor again
+  ansible.builtin.service:
+    name: harbor
+    state: started
+  listen: Restart pki_cert_dist harbor
+  when:
+    - "'harbor.service' in ansible_facts.services"
+    - "ansible_facts.services['harbor.service'].status == 'enabled'"
+
